@@ -19,3 +19,5 @@ We welcome data contributions for research and future development of our drum mo
 ***
 
 To inquire about training a custom model, contributing data or rating content, please contact us.
+
+_Our sincere appreciation to Andrej Karpathy for creating nanoGPT and his continuous support for the AI research community._
