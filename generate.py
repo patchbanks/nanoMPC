@@ -65,7 +65,6 @@ model.to(device)
 if compile:
     model = torch.compile(model) # requires PyTorch 2.0 (optional)
 
-##############################################################################################################
 
 load_meta = True
 if init_from == 'resume' and 'config' in checkpoint and 'dataset' in checkpoint['config']:
@@ -91,7 +90,7 @@ def encode(text):
 def decode(encoded):
     return ''.join([itos[i] for i in encoded])
 
-############################ Generate MIDI ############################################
+############################ Generate MIDI ############################
 
 def clear_midi(dir):
     for file in os.listdir(dir):
