@@ -16,32 +16,42 @@ comes up with a better simple Python solution I am all ears.
 
 import sys
 from ast import literal_eval
+import argparse
 
-for arg in sys.argv[1:]:
+parser = argparse.ArgumentParser(description="nanoMPC")
+parser.add_argument("--bpm", type=int, default=90, help="Beats per minute")
+parser.add_argument("--num_samples", type=int, default=1, help="Number of samples")
+args, unknown_args = parser.parse_known_args()  # Capture unknown args for configurator
+
+bpm = args.bpm
+num_samples = args.num_samples
+
+for arg in unknown_args:
+    if arg.startswith('--'):
+        print(f"Skipping command-line argument: {arg}")
+        continue
+
     if '=' not in arg:
-        # assume it's the name of a config file
-        assert not arg.startswith('--')
         config_file = arg
         print(f"Overriding config with {config_file}:")
         with open(config_file) as f:
             print(f.read())
         exec(open(config_file).read())
     else:
-        # assume it's a --key=value argument
-        assert arg.startswith('--')
         key, val = arg.split('=')
         key = key[2:]
+
         if key in globals():
+            if key in ['bpm', 'num_samples']:
+                continue
             try:
-                # attempt to eval it it (e.g. if bool, number, or etc)
                 attempt = literal_eval(val)
             except (SyntaxError, ValueError):
-                # if that goes wrong, just use the string
                 attempt = val
-            # ensure the types match ok
             assert type(attempt) == type(globals()[key])
-            # cross fingers
             print(f"Overriding: {key} = {attempt}")
             globals()[key] = attempt
         else:
             raise ValueError(f"Unknown config key: {key}")
+
+

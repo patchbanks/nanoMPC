@@ -16,13 +16,13 @@ import pretty_midi
 
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 out_dir = 'checkpoints' # ignored if init_from is not 'resume'
-ckpt_load = 'nanompc_01.pt'
+ckpt_load = 'model.pt'
 
 midi_dir = 'midi_output'
 os.makedirs(midi_dir, exist_ok=True)
 
-start = "start_token_goes_here" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
-num_samples = 10 # number of samples to draw
+start = "000000000000\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
+num_samples = 1 # number of samples to draw
 max_new_tokens = 1152 # number of tokens generated in each sample
 temperature = 1.0 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 8 # retain only the top_k most likely tokens, clamp others to have 0 probability
@@ -31,7 +31,7 @@ seed = random.randint(1, 100000)
 torch.manual_seed(seed)
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
-compile = True # use PyTorch 2.0 to compile the model to be faster
+compile = False # use PyTorch 2.0 to compile the model to be faster
 exec(open('configurator.py').read()) # overrides from command line or config file
 
 
@@ -47,7 +47,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 if init_from == 'resume':
     # init from a model saved in a specific directory
     ckpt_path = os.path.join(out_dir, ckpt_load)
-    checkpoint = torch.load(ckpt_path, map_location=device)
+    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
     gptconf = GPTConfig(**checkpoint['model_args'])
     model = GPT(gptconf)
     state_dict = checkpoint['model']
@@ -65,20 +65,21 @@ model.to(device)
 if compile:
     model = torch.compile(model) # requires PyTorch 2.0 (optional)
 
+##############################################################################################################
+
+tokenizer = re.compile(r'000000000000|\d{1}|\n')
 
 load_meta = True
 if init_from == 'resume' and 'config' in checkpoint and 'dataset' in checkpoint['config']:
     meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.pkl')
     load_meta = os.path.exists(meta_path)
 if load_meta:
-    #print(f"loading meta data...")
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
 
     stoi = meta.get('stoi', None)
     itos = meta.get('itos', None)
     vocab_size = meta.get('vocab_size', None)
-    tokenizer = meta.get('tokenizer', None)
 
 else:
     print(f"meta file not found at {meta_path}")
@@ -90,7 +91,6 @@ def encode(text):
 def decode(encoded):
     return ''.join([itos[i] for i in encoded])
 
-############################ Generate MIDI ############################
 
 def clear_midi(dir):
     for file in os.listdir(dir):
@@ -99,7 +99,7 @@ def clear_midi(dir):
 
 clear_midi(midi_dir)
 
-print("generating midi...")
+print("generating...")
 
 if start.startswith('FILE:'):
     with open(start[5:], 'r', encoding='utf-8') as f:
@@ -107,8 +107,10 @@ if start.startswith('FILE:'):
 start_ids = encode(start)
 x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
+
 midi_events = []
 seq_count = 0
+
 
 with torch.no_grad():
     with ctx:
@@ -156,7 +158,7 @@ midi_data = pd.DataFrame([pd.Series(event) for sequence in midi_events for event
 midi_data = midi_data[['file_name', 'pitch', 'velocity', 'start', 'end']]
 midi_data = midi_data.sort_values(by=['file_name', 'start']).reset_index(drop=True)
 
-trim_4br = midi_data[(midi_data['start'] <= 1536) & (midi_data['end'] <= 1536)]
+trim_4br = midi_data[(midi_data['start'] < 1536) & (midi_data['end'] <= 1536)]
 filter_bars = trim_4br.reset_index(drop=True)
 start_max = filter_bars['start'].max()
 end_max = filter_bars['end'].max()
@@ -172,7 +174,6 @@ def write_midi(midi_data):
         midi_events_by_file[file_name].append(event)
 
     for file_name, events in midi_events_by_file.items():
-        bpm = random.randint(85, 95)
         
         midi_data = pretty_midi.PrettyMIDI(initial_tempo=bpm, resolution=96)
         midi_data.time_signature_changes.append(pretty_midi.containers.TimeSignature(4, 4, 0))
@@ -198,10 +199,11 @@ def delete_tiny_files(output_dir):
     for root, _, files in os.walk(output_dir):
         for filename in files:
             file_path = os.path.join(root, filename)
-            if filename.lower().endswith('.mid') and os.path.getsize(file_path) <= 300:  # min_bytes = 300
+            if filename.lower().endswith('.mid') and os.path.getsize(file_path) <= 300:  # 300 bytes
                 os.remove(file_path)
                 file_count += 1
     return file_count
 
 deleted_files = delete_tiny_files(midi_dir)
+
 print("completed")
