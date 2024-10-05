@@ -8,9 +8,10 @@ This repo contains a modified version of nanoGPT for fast and efficient generati
 
 The model is capable of learning various styles of drumming and beat-making (finger drumming) with intricate detail, including humanized velocities, rhythm swings, and rudimental patterns. These results are largely made possible through a normalization process and the use of custom augmentation tools, ensuring the model is trained with sufficient examples of expressive drum notations. Additionally, the positional encodings and attention mechanism were slightly modified to improve accuracy.
 
-## Training for Music Production
+## Inference
 
-Currently, this model is only available through a development program for professional music producers and content creators. This program empowers creators to access the power of AI without the complexities of training a custom model.
+Use `colab_run.ipynb` to generate MIDI files with the provided checkpoint file. This model was trained on a large dataset of 4-bar drum notations in the styles of Lo-Fi, Boom Bap, Throwback and other subgenres of Hip Hop.
+
 
 ## Contributing
 
