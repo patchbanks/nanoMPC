@@ -10,7 +10,8 @@ The model is capable of learning various styles of drumming and beat-making (fin
 
 ## Inference
 
-Use `colab_run.ipynb` to generate MIDI files with the provided checkpoint file. This model was trained on a large dataset of 4-bar drum notations in the styles of Lo-Fi, Boom Bap, Throwback and other subgenres of Hip Hop.
+Use `colab_run.ipynb` to run the model with Gradio or generate bulk MIDI files using the provided checkpoint file. The model was trained on a large dataset of 4-bar drum notations in the styles of Lo-Fi, Boom Bap, Throwback, and other subgenres of Hip Hop.
+
 
 For easy inference: [![nanoMPC](https://img.shields.io/badge/View%20nanoMPC%20on-Hugging%20Face%20Spaces-blue)](https://huggingface.co/spaces/patchbanks/nanoMPC)
 
