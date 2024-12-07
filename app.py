@@ -22,7 +22,7 @@ ckpt_load = 'model.pt'
 
 start = "000000000000\n"
 num_samples = 1
-max_new_tokens = 1024
+max_new_tokens = 1152
 
 seed = random.randint(1, 100000)
 torch.manual_seed(seed)
