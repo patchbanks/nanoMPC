@@ -45,10 +45,10 @@ wandb_log = False # disabled by default
 wandb_project = 'nanoMPC'
 wandb_run_name = 'nanompc_01' # 'run' + str(time.time())
 # data
-dataset = 'nanompc_02'
+dataset = 'hip_hop'
 gradient_accumulation_steps = 8 # used to simulate larger batch sizes
 batch_size = 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
-block_size = 1152
+block_size = 768
 # model
 n_layer = 4
 n_head = 4
