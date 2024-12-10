@@ -15,7 +15,7 @@ with open(text_file, 'r') as f:
     text_data = f.read()
 print(f"dataset length: {len(text_data):,}")
 
-tokenizer = re.compile(r'000000000000|\d{1}|\n')
+tokenizer = re.compile(r'000000000000|\d{2}|\n')
 matches = tokenizer.findall(text_data)
 unique_pairs = sorted(set(matches), key=matches.index)
 
