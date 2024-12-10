@@ -23,7 +23,7 @@ ckpt_load = 'model.pt'
 
 start = "000000000000\n"
 num_samples = 1
-max_new_tokens = 384
+max_new_tokens = 768
 
 seed = random.randint(1, 100000)
 torch.manual_seed(seed)
@@ -122,7 +122,7 @@ def generate_midi(temperature, top_k):
     for sequence in midi_events:
         filtered_sequence = []
         for event in sequence:
-            if event['start'] < 768 and event['end'] <= 768:
+            if event['start'] < 1536 and event['end'] <= 1536:
                 filtered_sequence.append(event)
         if filtered_sequence:
             round_bars.append(filtered_sequence)
