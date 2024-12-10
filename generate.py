@@ -67,7 +67,7 @@ if compile:
 
 ##############################################################################################################
 
-tokenizer = re.compile(r'000000000000|\d{1}|\n')
+tokenizer = re.compile(r'000000000000|\d{2}|\n')
 
 load_meta = True
 if init_from == 'resume' and 'config' in checkpoint and 'dataset' in checkpoint['config']:
