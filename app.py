@@ -61,7 +61,9 @@ if compile:
 
 tokenizer = re.compile(r'000000000000|\d{2}|\n')
 
-meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.pkl')
+dataset = checkpoint['config']['dataset']
+print(f"Dataset: {dataset}")
+meta_path = os.path.join('data', dataset, 'meta.pkl')
 with open(meta_path, 'rb') as f:
     meta = pickle.load(f)
     stoi = meta.get('stoi', None)
@@ -161,10 +163,10 @@ def render_wav(midi_file, uploaded_sf2=None):
     if uploaded_sf2:
         sf2_file = uploaded_sf2
     else:
-        sf2_files = [f for f in os.listdir(sf2_dir) if f.endswith('.sf2')]
+        sf2_files = [f for f in os.listdir(os.path.join(sf2_dir, dataset)) if f.endswith('.sf2')]
         if not sf2_files:
             raise ValueError("No SoundFont (.sf2) file found in directory.")
-        sf2_file = os.path.join(sf2_dir, random.choice(sf2_files))
+        sf2_file = os.path.join(sf2_dir, dataset, random.choice(sf2_files))
 
     print(f"Using SoundFont: {sf2_file}")
     output_wav = os.path.join(temp_dir, 'output.wav')
@@ -229,11 +231,11 @@ custom_css = """
 
 with gr.Blocks(css=custom_css, theme="soft") as iface:
     gr.Markdown("<h1 style='font-weight: bold; text-align: center;'>nanoMPC - AI Midi Drum Sequencer</h1>")
-    gr.Markdown("<p style='text-align:center;'>nanoMPC is a tiny transformer model that generates MIDI drum beats inspired by Lo-Fi, Boom Bap and other styles of Hip Hop.</p>")
+    gr.Markdown("<p style='text-align:center;'>nanoMPC is a tiny transformer model that generates MIDI drum beats.</p>")
     
     with gr.Row():
         with gr.Column(scale=1):
-            bpm = gr.Slider(minimum=50, maximum=200, step=1, value=90, label="BPM")
+            bpm = gr.Slider(minimum=50, maximum=200, step=1, value=100, label="BPM")
             temperature = gr.Slider(minimum=0.1, maximum=2.0, step=0.1, value=1.0, label="Temperature")
             top_k = gr.Slider(minimum=4, maximum=256, step=1, value=128, label="Top-k")
             soundfont = gr.File(label="Optional: Upload SoundFont (preset=0, bank=0)")
