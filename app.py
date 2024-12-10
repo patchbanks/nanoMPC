@@ -10,6 +10,7 @@ from contextlib import nullcontext
 from model import GPTConfig, GPT
 from pedalboard import Pedalboard, Reverb, Compressor, Gain, Limiter
 from pedalboard.io import AudioFile
+import gradio as gr
 
 in_space = os.getenv("SYSTEM") == "spaces"
 
@@ -22,7 +23,7 @@ ckpt_load = 'model.pt'
 
 start = "000000000000\n"
 num_samples = 1
-max_new_tokens = 1152
+max_new_tokens = 384
 
 seed = random.randint(1, 100000)
 torch.manual_seed(seed)
@@ -58,7 +59,7 @@ model.to(device)
 if compile:
     model = torch.compile(model)
 
-tokenizer = re.compile(r'000000000000|\d{1}|\n')
+tokenizer = re.compile(r'000000000000|\d{2}|\n')
 
 meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.pkl')
 with open(meta_path, 'rb') as f:
@@ -116,9 +117,17 @@ def generate_midi(temperature, top_k):
             if sequence:
                 midi_events.append(sequence)
 
-    if midi_events:
-        midi_events = max(midi_events, key=len)
-        midi_events = [midi_events]
+    round_bars = []
+    
+    for sequence in midi_events:
+        filtered_sequence = []
+        for event in sequence:
+            if event['start'] < 768 and event['end'] <= 768:
+                filtered_sequence.append(event)
+        if filtered_sequence:
+            round_bars.append(filtered_sequence)
+
+    midi_events = round_bars
 
     return midi_events
 
@@ -203,23 +212,45 @@ def generate_and_return_files(bpm, temperature, top_k, uploaded_sf2=None):
     return midi_file, wav_fx
 
 
-iface = gr.Interface(
-    fn=generate_and_return_files,
-    inputs=[
-        gr.Slider(minimum=50, maximum=200, step=1, value=90, label="bpm"),
-        gr.Slider(minimum=0.1, maximum=2.0, step=0.1, value=1.0, label="temperature"),
-        gr.Slider(minimum=4, maximum=256, step=1, value=128, label="top_k"),
-        gr.File(label="Upload SoundFont (.sf2 file)"),
-    ],
-    outputs=[
-        gr.File(label="MIDI File"),
-        gr.Audio(label="Generated Audio", type="filepath")
-    ],
-    title="<h1 style='font-weight: bold; text-align: center;'>nanoMPC - AI Midi Drum Sequencer</h1>",
-    description="<p style='text-align:center;'>nanoMPC is a tiny transformer model that generates MIDI drum beats inspired by Lo-Fi, Boom Bap and other styles of Hip Hop.</p>",
-    theme="soft",
-    allow_flagging="never",
-)
+custom_css = """
+#generate-btn {
+    background-color: #6366f1 !important;
+    color: white !important;
+    border: none !important;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#generate-btn:hover {
+    background-color: #4f51c5 !important;
+}
+"""
+
+with gr.Blocks(css=custom_css, theme="soft") as iface:
+    gr.Markdown("<h1 style='font-weight: bold; text-align: center;'>nanoMPC - AI Midi Drum Sequencer</h1>")
+    gr.Markdown("<p style='text-align:center;'>nanoMPC is a tiny transformer model that generates MIDI drum beats inspired by Lo-Fi, Boom Bap and other styles of Hip Hop.</p>")
+    
+    with gr.Row():
+        with gr.Column(scale=1):
+            bpm = gr.Slider(minimum=50, maximum=200, step=1, value=90, label="BPM")
+            temperature = gr.Slider(minimum=0.1, maximum=2.0, step=0.1, value=1.0, label="Temperature")
+            top_k = gr.Slider(minimum=4, maximum=256, step=1, value=128, label="Top-k")
+            soundfont = gr.File(label="Optional: Upload SoundFont (preset=0, bank=0)")
+        
+        with gr.Column(scale=1):
+            midi_file = gr.File(label="MIDI File Output")
+            audio_file = gr.Audio(label="Generated Audio Output", type="filepath")
+            generate_button = gr.Button("Generate", elem_id="generate-btn")
+    
+    generate_button.click(
+        fn=generate_and_return_files,
+        inputs=[bpm, temperature, top_k, soundfont],
+        outputs=[midi_file, audio_file]
+    )
 
 iface.launch(share=True)
+
+
+
 
