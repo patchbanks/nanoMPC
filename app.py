@@ -62,7 +62,6 @@ if compile:
 tokenizer = re.compile(r'000000000000|\d{2}|\n')
 
 dataset = checkpoint['config']['dataset']
-print(f"Dataset: {dataset}")
 meta_path = os.path.join('data', dataset, 'meta.pkl')
 with open(meta_path, 'rb') as f:
     meta = pickle.load(f)
@@ -244,6 +243,7 @@ with gr.Blocks(css=custom_css, theme="soft") as iface:
             midi_file = gr.File(label="MIDI File Output")
             audio_file = gr.Audio(label="Generated Audio Output", type="filepath")
             generate_button = gr.Button("Generate", elem_id="generate-btn")
+            gr.Markdown(f"<p style='text-align:center;'><b>Model: {dataset}</b></p>")
     
     generate_button.click(
         fn=generate_and_return_files,
