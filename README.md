@@ -18,6 +18,8 @@ For easy inference: [![nanoMPC](https://img.shields.io/badge/View%20nanoMPC%20on
 
 **Hip Hop**: Generates beats in the style of boom bap, lo-fi, and other hip hop subgenres.
 
+**Trap**: Generates simple trap beats.
+
 **Drumwave**: Generates retro drum machine rhythms.
 
 ## Contributing
