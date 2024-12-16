@@ -234,7 +234,7 @@ with gr.Blocks(css=custom_css, theme="soft") as iface:
     
     with gr.Row():
         with gr.Column(scale=1):
-            bpm = gr.Slider(minimum=50, maximum=200, step=1, value=100, label="BPM")
+            bpm = gr.Slider(minimum=50, maximum=200, step=1, value=120, label="BPM")
             temperature = gr.Slider(minimum=0.1, maximum=2.0, step=0.1, value=1.0, label="Temperature")
             top_k = gr.Slider(minimum=4, maximum=256, step=1, value=128, label="Top-k")
             soundfont = gr.File(label="Optional: Upload SoundFont (preset=0, bank=0)")
