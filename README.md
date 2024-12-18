@@ -24,6 +24,9 @@ For easy inference: [![nanoMPC](https://img.shields.io/badge/View%20nanoMPC%20on
 
 **House**: Generates basic house beats.
 
+**Pop Rock**: Generates simple acoustic drum patterns in the style of pop-rock.
+
+
 ## Contributing
 
 We welcome data contributions for research and future development of our drum models. Data contributors may be given access to our augmentation tools to generate large-scale datasets. Additionally, musicians can receive free MIDI files for rating content. By providing human feedback, you will help us improve the model and enhance its capabilities.
