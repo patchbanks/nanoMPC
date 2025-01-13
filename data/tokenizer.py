@@ -41,9 +41,6 @@ n = int(0.8*len(data))
 train_data = data[:n]
 val_data = data[n:]
 
-train_data = data[:n]
-val_data = data[n:]
-
 train_ids = np.array(train_data, dtype=np.uint16)
 val_ids = np.array(val_data, dtype=np.uint16)
 train_path = os.path.join(data_dir, 'train.bin')
