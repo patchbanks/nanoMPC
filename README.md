@@ -12,20 +12,21 @@ The model is capable of learning various styles of drumming and beat-making (fin
 
 Use `colab_run.ipynb` to run a model with Gradio or generate bulk MIDI files. 
 
-For easy inference: [![nanoMPC](https://img.shields.io/badge/View%20nanoMPC%20on-Hugging%20Face%20Spaces-blue)](https://huggingface.co/spaces/patchbanks/nanoMPC)
+Run demo models on Hugging Face Spaces: [![View on Hugging Face](https://img.shields.io/badge/View%20on-Hugging%20Face%20Spaces-blue)](https://huggingface.co/patchbanks)
 
 ## Models
 
-**Hip Hop**: Generates beats in the style of boom bap, lo-fi, and other hip hop subgenres.
+**Hip Hop**: Boom bap, lo-fi and classic hip hop drum beats.
 
-**Trap**: Generates simple trap beats.
+**Trap**: Minimalist trap-inspired rhythms.
 
-**Drumwave**: Generates retro drum machine rhythms.
+**Drumwave**: Retro 80s drum machine rhythms.
 
-**House**: Generates basic house beats.
+**House**: Basic four-on-the-floor house beats.
 
-**Pop Rock**: Generates simple acoustic drum patterns in the style of pop-rock.
+**Pop Rock**: Simple acoustic pop-rock drum patterns.
 
+**Neural Breaks**: Funk and soul drum breaks with dynamic velocity.
 
 ## Contributing
 
