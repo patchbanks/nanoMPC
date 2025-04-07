@@ -12,6 +12,7 @@ from pedalboard import Pedalboard, Reverb, Compressor, Gain, Limiter
 from pedalboard.io import AudioFile
 import gradio as gr
 
+
 in_space = os.getenv("SYSTEM") == "spaces"
 
 temp_dir = 'temp'
@@ -27,13 +28,12 @@ max_new_tokens = 768
 
 seed = random.randint(1, 100000)
 torch.manual_seed(seed)
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu' if torch.cuda.is_available() else 'cpu'
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'
 compile = False
 exec(open('configurator.py').read())
 
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
+
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 device_type = 'cpu' if 'cuda' in device else 'cpu'
@@ -130,6 +130,16 @@ def generate_midi(temperature, top_k):
 
     midi_events = round_bars
 
+    for track in midi_events:
+        track.sort(key=lambda x: x['start'])
+        unique_notes = []
+        
+        for note in track:
+            if not any(abs(note['start'] - n['start']) < 12 and note['pitch'] == n['pitch'] for n in unique_notes):
+                unique_notes.append(note)
+        
+        track[:] = unique_notes 
+
     return midi_events
 
 
@@ -153,11 +163,11 @@ def write_midi(midi_events, bpm):
     print(f"Generated: {midi_path}")
 
 
-def render_wav(midi_file, uploaded_sf2=None):
+def render_wav(midi_file, uploaded_sf2=None, output_level='2.0'):
     sf2_dir = 'sf2_kits'
     audio_format = 's16'
     sample_rate = '44100'
-    gain = '2.0'
+    gain = str(output_level)
 
     if uploaded_sf2:
         sf2_file = uploaded_sf2
@@ -180,7 +190,7 @@ def render_wav(midi_file, uploaded_sf2=None):
     return output_wav
 
 
-def generate_and_return_files(bpm, temperature, top_k, uploaded_sf2=None):
+def generate_and_return_files(bpm, temperature, top_k, uploaded_sf2=None, output_level='2.0'):
     midi_events = generate_midi(temperature, top_k)  
     if not midi_events:
         return "Error generating MIDI.", None, None
@@ -188,7 +198,7 @@ def generate_and_return_files(bpm, temperature, top_k, uploaded_sf2=None):
     write_midi(midi_events, bpm)
     
     midi_file = os.path.join(temp_dir, 'output.mid')
-    wav_raw = render_wav(midi_file, uploaded_sf2)
+    wav_raw = render_wav(midi_file, uploaded_sf2, output_level)
     wav_fx = os.path.join(temp_dir, 'output_fx.wav')
 
     sfx_settings = [
@@ -214,45 +224,64 @@ def generate_and_return_files(bpm, temperature, top_k, uploaded_sf2=None):
 
 
 custom_css = """
+#container {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
 #generate-btn {
-    background-color: #6366f1 !important;
-    color: white !important;
-    border: none !important;
-    font-size: 16px;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+  font-size: 18px;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: linear-gradient(90deg, hsla(268, 90%, 70%, 1) 0%, hsla(260, 72%, 74%, 1) 50%, hsla(247, 73%, 65%, 1) 100%);
+  transition: background 1s ease;
 }
 #generate-btn:hover {
-    background-color: #4f51c5 !important;
+  color: white;
+  background: linear-gradient(90deg, hsla(268, 90%, 62%, 1) 0%, hsla(260, 70%, 70%, 1) 50%, hsla(247, 73%, 55%, 1) 100%);
 }
+#container .prose {
+  text-align: center !important;
+}
+#container h1 {
+  font-weight: bold;
+  font-size: 40px;
+  margin: 0px;
+}
+#container p {
+  font-size: 18px;
+  text-align: center;
+}
+
 """
 
-with gr.Blocks(css=custom_css, theme="soft") as iface:
-    gr.Markdown("<h1 style='font-weight: bold; text-align: center;'>nanoMPC - AI Midi Drum Sequencer</h1>")
-    gr.Markdown("<p style='text-align:center;'>nanoMPC is a tiny transformer model that generates MIDI drum beats.</p>")
-    
-    with gr.Row():
-        with gr.Column(scale=1):
-            bpm = gr.Slider(minimum=50, maximum=200, step=1, value=120, label="BPM")
-            temperature = gr.Slider(minimum=0.1, maximum=2.0, step=0.1, value=1.0, label="Temperature")
-            top_k = gr.Slider(minimum=4, maximum=256, step=1, value=128, label="Top-k")
-            soundfont = gr.File(label="Optional: Upload SoundFont (preset=0, bank=0)")
-        
-        with gr.Column(scale=1):
-            midi_file = gr.File(label="MIDI File Output")
-            audio_file = gr.Audio(label="Generated Audio Output", type="filepath")
-            generate_button = gr.Button("Generate", elem_id="generate-btn")
-            gr.Markdown(f"<p style='text-align:center;'><b>Model: {dataset}</b></p>")
-    
-    generate_button.click(
-        fn=generate_and_return_files,
-        inputs=[bpm, temperature, top_k, soundfont],
-        outputs=[midi_file, audio_file]
+with gr.Blocks(
+    css=custom_css,
+    theme=gr.themes.Default(
+        font=[gr.themes.GoogleFont("Roboto"), "sans-serif"],
+        primary_hue="violet",
+        secondary_hue="violet"
     )
+) as iface:
+    with gr.Column(elem_id="container"):
+        gr.Markdown("<h1 style='font-weight: bold; text-align: center;'>nanoMPC</h1>")
+        bpm = gr.Slider(minimum=50, maximum=200, step=1, value=120, label="BPM")
+        temperature = gr.Slider(minimum=0.1, maximum=2.0, step=0.1, value=1.0, label="Temperature")
+        top_k = gr.Slider(minimum=4, maximum=16, step=1, value=8, label="Top-k")
+        output_level = gr.Slider(minimum=0, maximum=3, step=0.10, value=2.0, label="Output Gain")
+        generate_button = gr.Button("Generate", elem_id="generate-btn")
+        midi_file = gr.File(label="MIDI Output")
+        audio_file = gr.Audio(label="Audio Output", type="filepath")
+        soundfont = gr.File(label="Optional: Upload SoundFont (preset=0, bank=0)")
+
+        generate_button.click(
+            fn=generate_and_return_files,
+            inputs=[bpm, temperature, top_k, soundfont, output_level],
+            outputs=[midi_file, audio_file]
+        )
+
+        gr.Markdown("<p style='font-size: 16px;'>Developed by <a href='https://www.patchbanks.com/' target='_blank'><strong>Patchbanks</strong></a></p>")
 
 iface.launch(share=True)
-
-
-
-
